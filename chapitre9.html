@@ -59,7 +59,9 @@ html,body {
 	<p><a href="/">Chapitre9</a></p>
 </div>
 
-<script async src="./libs/artoolkit.min.js"></script>
+<!-- <script async src="./libs/artoolkit.min.js"></script> -->
+<script src="./libs/artoolkit.api.js"></script>
+<script async src="./libs/artoolkit.debug.js"></script>
 <script async src="./libs/three.min.js"></script>
 <script async src="./libs/artoolkit.three.js"></script>
 
@@ -76,10 +78,12 @@ window.ARThreeOnLoad = function() {
 	
 	request.onload = function() {
 		animations = request.response;
-
+		console.log('Chapitre9')
 		ARController.getUserMediaThreeScene({
 			maxARVideoSize: 640,
 			cameraParam: 'data/camera_para-iPhone 5 rear 640x480 1.0m.dat',
+			// cameraParam: 'data/camera_para.dat',
+			// facingMode : 'environment',
 			onSuccess: function(arScene, arController, arCamera) {
 
 				document.body.className = arController.orientation;
