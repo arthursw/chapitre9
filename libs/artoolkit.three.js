@@ -138,7 +138,7 @@
 							obj.visible = false;
 							obj.stopTimeout = setTimeout(()=> {
 								obj.animation.pause();
-								obj.animation.currentTime = 0;
+								// obj.animation.currentTime = 0;
 							}, 500);
 						}
 					}
@@ -151,7 +151,7 @@
 							obj.visible = false;
 							obj.stopTimeout = setTimeout(()=> {
 								obj.animation.pause();
-								obj.animation.currentTime = 0;
+								// obj.animation.currentTime = 0;
 							}, 500);
 						}
 					}
@@ -299,6 +299,18 @@
 
 				}
 				if (obj) {
+					if(window.currentObj == null) {
+						window.currentObj = obj;
+					}
+					if(obj != window.currentObj) {
+						if ( window.lastTimeVideoChanged != null && Date.now() < window.lastTimeVideoChanged + 1000 ) {
+							return;
+						}
+						console.log('lastTimeVideoChanged', Date.now(), window.lastTimeVideoChanged + 1000, window.lastTimeVideoChanged);
+						window.lastTimeVideoChanged = Date.now();
+						window.currentObj = obj;
+					}
+					
 					setProjectionMatrix(obj.matrix, ev.data.matrixGL_RH);
 					obj.visible = true;
 					if(obj.stopTimeout != null) {
@@ -308,12 +320,31 @@
 					if(obj.animation) {
 						let videoPath = obj.animationURL.split('/');
 						let videoName = videoPath[videoPath.length-1];
-						console.log(obj.animation.src, encodeURIComponent(videoName));
-						if(!obj.animation.src.endsWith(encodeURIComponent(videoName))) {
-							console.log('diff')
+						if( !obj.animation.src.endsWith(encodeURIComponent(videoName)) ) { 
+							// && 
+							// (window.lastTimeVideoChanged == null || Date.now() > window.lastTimeVideoChanged + 1000 ) ) {
+							console.log('diff');
 							obj.animation.src = obj.animationURL;
+							obj.animation.load();
+							obj.animationCube.visible = true;
 						}
-						obj.animation.play();
+						else if(obj.animation.paused) {
+							
+							obj.animation.pause();
+
+							console.log('play')
+							let startPlayPromise = obj.animation.play();
+
+							if (startPlayPromise !== undefined) {
+								startPlayPromise.then(() => { 
+									console.log('playing')
+									obj.animationCube.visible = false;
+								}).catch(error => {
+									console.log('error play');
+									console.error(error);
+								});
+							}
+						}
 					}
 				}
 			});

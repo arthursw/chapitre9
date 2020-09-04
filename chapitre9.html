@@ -1,199 +1,392 @@
 <html>
+
 <head>
-<title>Mixed marker example with Three.js</title>
-<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1">
-<style>
-html,body {
-	margin: 0;
-	padding: 0;
-	width: 100%;
-	text-align: center;
-	overflow-x: hidden;
-	display: grid;
-    place-items: center;
-    position: absolute;
-    top: 0;
-	bottom: 0;
-	background-color: black;
-}
-.portrait canvas {
-	transform-origin: 0 0;
-	transform: rotate(-90deg) translateX(-100%);
-}
-.desktop canvas {
- 	transform: scale(-1, 1);
-}
-#menu {
-	display: block;
-    position: absolute;
-    bottom: 20px;
-}
+	<title>Mixed marker example with Three.js</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1">
+	<style>
+		html,
+		body {
+			margin: 0;
+			padding: 0;
+			width: 100%;
+			text-align: center;
+			overflow-x: hidden;
+			display: grid;
+			place-items: center;
+			position: absolute;
+			top: 0;
+			bottom: 0;
+			background-color: black;
+		}
 
-#menu a {
-  font-family: "Montserrat", sans-serif;
-  margin: 10px;
-  text-decoration: none;
-  color: white;
-  background-color: #ff6d70;
-  padding: 10px 50px;
-  width: 200px;
-  text-align: center;
-  border-radius: 50px;
-  transition: background-color .3s ease-in-out;
-}
+		body canvas {
+			position: absolute;
+		}
 
-#menu a:hover {
-  color: white;
-  background-color: #081263;
-}
+		.portrait canvas {
+			/* transform-origin: 0 0;
+			transform: rotate(-90deg) translateX(-100%); */
+			transform-origin: center;
+			transform: rotate(-90deg);
+		}
 
-</style>
+		.desktop canvas {
+			transform: scale(-1, 1);
+		}
+		
+		#menu {
+			display: block;
+			position: absolute;
+			bottom: 20px;
+		}
+
+		#menu a {
+			font-family: "Montserrat", sans-serif;
+			margin: 10px;
+			text-decoration: none;
+			color: white;
+			background-color: #ff6d70;
+			padding: 10px 50px;
+			width: 200px;
+			text-align: center;
+			border-radius: 50px;
+			transition: background-color .3s ease-in-out;
+		}
+
+		#menu a:hover {
+			color: white;
+			background-color: #081263;
+		}
+		
+		@media only screen and (max-height: 340px) {
+				
+			#menu {
+				display: block;
+				position: absolute;
+				bottom: 5px;
+				right: 5px;
+				font-size: 15px;
+			}
+			#menu a {
+				padding: 6px 14px;
+			}
+
+		}
+		
+		#start-screen {
+			display: block;
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			transform: translate(-50%, -50%);
+			font-family: "Montserrat", sans-serif;
+			text-decoration: none;
+			color: white;
+			background-color: #ff6d70;
+			padding: 10px 50px;
+			width: 200px;
+			text-align: center;
+			border-radius: 50px;
+			text-align: center;
+			border-radius: 50px;
+			padding: 30px;
+			transition: background-color .3s ease-in-out;
+		}
+		#start-screen.loaded:hover {
+			color: white;
+			background-color: #081263;
+		}
+
+		#start-button {
+			cursor: pointer;
+			display: none;
+		}
+
+		.lds-dual-ring {
+			display: inline-block;
+			width: 80px;
+			height: 80px;
+		}
+
+		.lds-dual-ring:after {
+			content: " ";
+			display: block;
+			width: 64px;
+			height: 64px;
+			margin: 8px;
+			border-radius: 50%;
+			border: 6px solid #fff;
+			border-color: #fff transparent #fff transparent;
+			animation: lds-dual-ring 1.2s linear infinite;
+		}
+
+		@keyframes lds-dual-ring {
+			0% {
+				transform: rotate(0deg);
+			}
+
+			100% {
+				transform: rotate(360deg);
+			}
+		}
+		#background {
+			background-color: #081263;
+			opacity: 0.5;
+			position: absolute;
+			top: 0;
+			bottom: 0;
+			left: 0;
+			right: 0;
+			width: 100%;
+			height: 100%;
+		}
+
+		/* #menu {
+			display: none;
+		}
+		#start-screen {
+			display: none;
+		}
+		#background {
+			display: none;
+		} */
+	</style>
 </head>
+
 <body>
 
-<video id="animation" loop crossOrigin="anonymous" playsinline style="display:none">
-	<source src="animations/EK_3_Un_petit_mot_doux_1.mp4" type='video/mp4'>
-</video>
-
-<div id="menu">
-	<p><a href="/">Chapitre9</a></p>
-</div>
-
-<!-- <script async src="./libs/artoolkit.min.js"></script> -->
-<script src="./libs/artoolkit.api.js"></script>
-<script async src="./libs/artoolkit.debug.js"></script>
-<script async src="./libs/three.min.js"></script>
-<script async src="./libs/artoolkit.three.js"></script>
-
-<script>
-var animations = null;
-window.ARThreeOnLoad = function() {
-	let requestURL = 'animations.json';
-	let request = new XMLHttpRequest();
-	request.open('GET', requestURL);
-
-	request.responseType = 'json';
-	request.send();
-	
-	
-	request.onload = function() {
-		animations = request.response;
-		console.log('Chapitre9')
-		ARController.getUserMediaThreeScene({
-			maxARVideoSize: 640,
-			cameraParam: 'data/camera_para-iPhone 5 rear 640x480 1.0m.dat',
-			// cameraParam: 'data/camera_para.dat',
-			// facingMode : 'environment',
-			onSuccess: function(arScene, arController, arCamera) {
-
-				document.body.className = arController.orientation;
-
-				arController.setPatternDetectionMode(artoolkit.AR_TEMPLATE_MATCHING_MONO_AND_MATRIX);
-
-				var renderer = new THREE.WebGLRenderer({antialias: true});
-				if (arController.orientation === 'portrait') {
-					var w = (window.innerWidth / arController.videoHeight) * arController.videoWidth;
-					var h = window.innerWidth;
-					renderer.setSize(w, h);
-					renderer.domElement.style.paddingBottom = (w-h) + 'px';
-				} else {
-					if (/Android|mobile|iPad|iPhone/i.test(navigator.userAgent)) {
-						renderer.setSize(window.innerWidth, (window.innerWidth / arController.videoWidth) * arController.videoHeight);
-					} else {
-						renderer.setSize(arController.videoWidth, arController.videoHeight);
-						document.body.className += ' desktop';
-					}
-				}
-
-				document.body.insertBefore(renderer.domElement, document.body.firstChild);
-
-				var sphere = new THREE.Mesh(
-					new THREE.SphereGeometry(1.0, 8, 8),
-					new THREE.MeshNormalMaterial()
-				);
-				sphere.material.flatShading;
-				sphere.position.z = 1.0;
-
-				var torus = new THREE.Mesh(
-					new THREE.TorusGeometry(0.3*2.5, 0.2*2.0, 8, 8),
-					new THREE.MeshNormalMaterial()
-				);
-				torus.material.flatShading;
-				torus.position.z = 1.25;
-				torus.rotation.x = Math.PI/2;
-
-				var cube = new THREE.Mesh(
-					new THREE.BoxGeometry(1,1,1),
-					new THREE.MeshNormalMaterial()
-				);
-				cube.material.flatShading;
-				cube.position.z = 0.5;
-				
-				var animationVideo = document.getElementById( 'animation' );
-				var texture = new THREE.VideoTexture( animationVideo );
-				let i = 0;
-				for(let animation of animations.barcodes) {
-
-					var plane = new THREE.Mesh(
-						new THREE.PlaneGeometry(animation.width, animation.height),
-						new THREE.MeshBasicMaterial( {  map: texture, color: 0xffffff, side: THREE.DoubleSide} )
-					);
-					plane.material.flatShading;
-					plane.position.z = 0.5;
-					plane.position.x = animation.x;
-					plane.position.y = animation.y;
-
-					var markerRoot = arController.createThreeBarcodeMarker(i, 1);
-					markerRoot.animation = animationVideo;
-					markerRoot.animationURL = animation.url;
-					markerRoot.add(plane);
-					arScene.scene.add(markerRoot);
-					i++;
-				}
-				for(let animation of animations.patterns) {
+	<video preload="auto" id="animation" loop crossOrigin="anonymous" playsinline style="display:none">
+		<source src="animations/EK_3_Un_petit_mot_doux_1.mp4" type='video/mp4'>
+	</video>
 
 
-					arController.loadMarker(animation.patt, (markerId)=> {
+	<div id="background">
+	</div>
 
-						var plane = new THREE.Mesh(
-							new THREE.PlaneGeometry(animation.width, animation.height),
-							new THREE.MeshBasicMaterial( {  map: texture, color: 0xffffff, side: THREE.DoubleSide} )
-						);
-						plane.material.flatShading;
-						plane.position.z = 0.5;
-						plane.position.x = animation.x;
-						plane.position.y = animation.y;
-						var markerRoot = arController.createThreeMarker(markerId, 3);
-						markerRoot.add(plane);
-						markerRoot.animation = animationVideo;
-						markerRoot.animationURL = animation.url;
-						arScene.scene.add(markerRoot);
-					});
-				}
+	<div id="start-screen">
+		
+		<div id="loading-animation">
+			<div class="lds-dual-ring"></div>
+			<p>Chargement</p>
+		</div>
+
+		<div id="start-button">
+			<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true"
+			focusable="false" width="1em" height="1em"
+			style="-ms-transform: rotate(360deg); -webkit-transform: rotate(360deg); transform: rotate(360deg); transform: scale(2); margin-top: 20px;"
+			preserveAspectRatio="xMidYMid meet" viewBox="0 0 32 32">
+			<path
+				d="M16 2a14 14 0 1 0 14 14A14 14 0 0 0 16 2zm7.48 14.88l-11 6a1 1 0 0 1-1 0A1 1 0 0 1 11 22V10a1 1 0 0 1 .49-.86a1 1 0 0 1 1 0l11 6a1 1 0 0 1 0 1.76z"
+				fill="white" /></svg>
+			<p>Commencer</p>
+		</div>
+	</div>
 
 
-				var tick = function() {
-					arScene.process();
-					arScene.renderOn(renderer);
-					requestAnimationFrame(tick);
-				};
 
-				tick();
-				
-				let canvas = document.getElementsByTagName('canvas')[0];
-				canvas.style = 'width: 100%';
-			}
+	<div id="menu">
+		<p><a href="/">Chapitre 9</a></p>
+	</div>
+
+
+	<script async src="./libs/artoolkit.min.js"></script>
+	<!-- <script src="./libs/artoolkit.api.js"></script> -->
+	<!-- <script async src="./libs/artoolkit.debug.js"></script> -->
+	<script async src="./libs/three.min.js"></script>
+	<script async src="./libs/artoolkit.three.js"></script>
+
+	<script>
+		var animations = null;
+		var animationMetadataLoaded = false;
+		var animationVideo = document.getElementById('animation');
+		let startButton = document.getElementById('start-button');
+		let startScreen = document.getElementById('start-screen');
+		let background = document.getElementById('background');
+
+		
+
+		animationVideo.addEventListener('loadedmetadata', (event) => {
+			animationMetadataLoaded = true;
 		});
 
-		delete window.ARThreeOnLoad;
+		animationVideo.addEventListener('canplay', (event) => {
+			animationMetadataLoaded = true;
+		});
 
-	};
-};
+		startButton.addEventListener('click', function (event) {
 
-if (window.ARController && ARController.getUserMediaThreeScene) {
-	ARThreeOnLoad();
-}
-</script>
+			animationVideo.play();
+			animationVideo.load();
+			setTimeout(function () {
+				animationVideo.pause();
+			}, 100);
+
+			startScreen.style.display = 'none';
+			background.style.display = 'none';
+			if(window.threeRenderer) {
+				window.threeRenderer.domElement.style.display = 'inherit';
+			}
+
+			ARController.getUserMediaThreeScene({
+				maxARVideoSize: 640,
+				cameraParam: 'data/camera_para-iPhone 5 rear 640x480 1.0m.dat',
+				// cameraParam: 'data/camera_para.dat',
+				// facingMode : 'environment',
+				onSuccess: function (arScene, arController, arCamera) {
+
+					document.body.className = arController.orientation;
+
+					arController.setPatternDetectionMode(artoolkit.AR_TEMPLATE_MATCHING_MONO_AND_MATRIX);
+
+					var renderer = new THREE.WebGLRenderer({ antialias: true });
+					if (arController.orientation === 'portrait') {
+						var w = (window.innerWidth / arController.videoHeight) * arController.videoWidth;
+						var h = window.innerWidth;
+						renderer.setSize(w, h);
+						renderer.domElement.style.paddingBottom = (w - h) + 'px';
+					} else {
+						if (/Android|mobile|iPad|iPhone/i.test(navigator.userAgent)) {
+							renderer.setSize(window.innerWidth, (window.innerWidth / arController.videoWidth) * arController.videoHeight);
+						} else {
+							renderer.setSize(arController.videoWidth, arController.videoHeight);
+							document.body.className += ' desktop';
+						}
+					}
+					if(startScreen.style.display != 'none') {
+						renderer.domElement.style.display = 'none';
+						window.threeRenderer = renderer;
+					}
+
+					document.body.insertBefore(renderer.domElement, document.body.firstChild);
+
+					let cubes = [];
+
+					var texture = new THREE.VideoTexture(animationVideo);
+					let i = 0;
+					
+					let createARScene = (animation, texture)=> {
+						var group = new THREE.Group();
+						var plane = new THREE.Mesh(
+							new THREE.PlaneGeometry(animation.width, animation.height),
+							new THREE.MeshBasicMaterial({ map: texture, color: 0xffffff, side: THREE.DoubleSide })
+						);
+
+						plane.material.flatShading;
+						plane.position.z = 0.25;
+						plane.position.x = animation.x;
+						plane.position.y = animation.y;
+						
+						var cube = new THREE.Mesh(
+							new THREE.BoxGeometry(0.5, 0.5, 0.5),
+							new THREE.MeshNormalMaterial()
+						);
+						cube.material.flatShading;
+						cube.position.z = 0.5;
+						cube.position.x = animation.x;// + animation.width / 2;
+						cube.position.y = animation.y;// + animation.height / 2;
+						cubes.push(cube);
+						
+						group.add( cube );
+						group.add( plane );
+						group.cube = cube;
+						return group;
+					};
+					let attachScene = (markerRoot, group, animation)=> {
+						markerRoot.animation = animationVideo;
+						markerRoot.animationURL = animation.url;
+						markerRoot.animationCube = group.cube;
+						markerRoot.add(group);
+						arScene.scene.add(markerRoot);
+					};
+
+					if(animations.barcodes != null && animations.barcodes.length > 0) {
+						for (let animation of animations.barcodes) {
+							
+							let group = createARScene(animation, texture);
+							var markerRoot = arController.createThreeBarcodeMarker(i, 1);
+							attachScene(markerRoot, group, animation);
+							i++;
+						}
+					}
+					if(animations.patterns != null && animations.patterns.length > 0) {
+						for (let animation of animations.patterns) {
+
+							arController.loadMarker(animation.patt, (markerId) => {
+								let group = createARScene(animation, texture);
+								var markerRoot = arController.createThreeMarker(markerId, 3);
+								attachScene(markerRoot, group, animation);
+							});
+						}
+					}
+					let preloadVideo = (animation)=> {
+						let link = document.createElement('link');
+						link.setAttribute('rel', 'preload');
+						link.setAttribute('as', 'video');
+						link.setAttribute('href', animation.url);
+						document.head.appendChild(link);
+						fetch(animation.url);
+					};
+					if(animations.barcodes != null && animations.barcodes.length > 0) {
+						for (let animation of animations.barcodes) {
+							preloadVideo(animation);
+						}
+					}
+					if(animations.patterns != null && animations.patterns.length > 0) {
+						for (let animation of animations.patterns) {
+							preloadVideo(animation);
+						}
+					}
+
+
+					var tick = function () {
+						for(let cube of cubes) {
+							cube.rotation.z += 0.05;
+						}
+						arScene.process();
+						arScene.renderOn(renderer);
+						requestAnimationFrame(tick);
+					};
+
+					tick();
+
+					let canvas = document.getElementsByTagName('canvas')[0];
+					canvas.style = 'width: 100%';
+				}
+			});
+		});
+
+		let requestURL = 'animations.json';
+		let request = new XMLHttpRequest();
+		request.open('GET', requestURL);
+
+		request.responseType = 'json';
+		request.send();
+
+		request.onload = function () {
+			animations = request.response;
+		};
+
+		window.ARThreeOnLoad = function () {
+			console.log('Chapitre 9');
+			let loadingAnimation = document.getElementById('loading-animation')
+			loadingAnimation.style.display = 'none';
+			startButton.style.display = 'block';
+			startScreen.classList.add('loaded');
+
+		};
+
+		var loadTick = function() {
+			if (window.ARController && ARController.getUserMediaThreeScene && window.ARThreeOnLoad && animations && animationMetadataLoaded && THREE.BallSpinerLoader) {
+				ARThreeOnLoad();
+			} else {
+				setTimeout(loadTick, 500);
+			}
+		};
+
+		loadTick();
+
+	</script>
 
 </body>
+
 </html>
